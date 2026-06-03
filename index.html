@@ -1,1 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Torneo de Fútbol</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3a;
+      --accent: #00e676;
+      --accent-dim: #00e67622;
+      --text: #e8eaf0;
+      --text-muted: #7b7f96;
+      --header-bg: #141720;
+    }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--header-bg);
+      border-bottom: 2px solid var(--accent);
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 0.25rem;
+      margin-left: auto;
+    }
+
+    .nav-links a {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.4rem 0.85rem;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--text);
+      background: var(--border);
+    }
+
+    .nav-links a.active {
+      color: var(--accent);
+    }
+
+    /* MAIN */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    /* SECTION */
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* TABLE */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead tr {
+      background: var(--header-bg);
+    }
+
+    thead th {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0.75rem 1rem;
+      text-align: center;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    thead th:first-child { text-align: left; padding-left: 1.25rem; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--accent-dim); }
+
+    tbody td {
+      padding: 0.7rem 1rem;
+      text-align: center;
+      color: var(--text);
+    }
+
+    tbody td:first-child {
+      text-align: left;
+      padding-left: 1.25rem;
+    }
+
+    /* Posiciones: col PTS destacada */
+    .td-pts {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .td-pos {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      color: var(--text-muted);
+      width: 2rem;
+    }
+
+    .td-equipo a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .td-equipo a:hover { color: var(--accent); }
+
+    /* Top 3 */
+    tbody tr:nth-child(1) .td-pos { color: #ffd700; }
+    tbody tr:nth-child(2) .td-pos { color: #c0c0c0; }
+    tbody tr:nth-child(3) .td-pos { color: #cd7f32; }
+
+    /* Goleadores: goles destacados */
+    .td-goles {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* LOADING / ERROR */
+    .estado {
+      text-align: center;
+      padding: 2.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .estado.error { color: #ff5252; }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      nav { gap: 1rem; padding: 0 1rem; }
+      .nav-brand { font-size: 1.1rem; }
+      .hide-mobile { display: none; }
+      thead th, tbody td { padding: 0.6rem 0.5rem; font-size: 0.8rem; }
+      thead th:first-child, tbody td:first-child { padding-left: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-brand" href="index.html">⚽ TORNEO</a>
+    <div class="nav-links">
+      <a href="index.html" class="active">Posiciones</a>
+      <a href="fixture.html">Fixture</a>
+      <a href="cargar.html">Cargar</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- TABLA DE POSICIONES -->
+    <section>
+      <div class="section-title">Tabla de Posiciones</div>
+      <div class="table-wrap">
+        <table id="tbl-posiciones">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th style="text-align:left; padding-left:1.25rem">Equipo</th>
+              <th>PJ</th>
+              <th class="hide-mobile">PG</th>
+              <th class="hide-mobile">PE</th>
+              <th class="hide-mobile">PP</th>
+              <th class="hide-mobile">GF</th>
+              <th class="hide-mobile">GC</th>
+              <th>DG</th>
+              <th>PTS</th>
+            </tr>
+          </thead>
+          <tbody id="body-posiciones">
+            <tr><td colspan="10" class="estado">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TABLA DE GOLEADORES -->
+    <section>
+      <div class="section-title">Goleadores</div>
+      <div class="table-wrap">
+        <table id="tbl-goleadores">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th style="text-align:left; padding-left:1.25rem">Jugador</th>
+              <th>Equipo</th>
+              <th>Goles</th>
+            </tr>
+          </thead>
+          <tbody id="body-goleadores">
+            <tr><td colspan="4" class="estado">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script>
+    // ─── TABLA DE POSICIONES ───────────────────────────────────────────────
+
+    async function cargarPosiciones() {
+      const tbody = document.getElementById('body-posiciones');
+
+      try {
+        // Traer todos los equipos
+        const { data: equipos, error: eqErr } = await supabase
+          .from('Equipo').select('*');
+        if (eqErr) throw eqErr;
+
+        // Traer todos los partidos jugados
+        const { data: partidos, error: pErr } = await supabase
+          .from('Partido').select('*').eq('jugado', true);
+        if (pErr) throw pErr;
+
+        // Calcular stats por equipo
+        const stats = {};
+        equipos.forEach(e => {
+          stats[e.id] = { id: e.id, nombre: e.nombre, pj:0, pg:0, pe:0, pp:0, gf:0, gc:0 };
+        });
+
+        partidos.forEach(p => {
+          const e1 = stats[p.id_equipo_1];
+          const e2 = stats[p.id_equipo_2];
+          if (!e1 || !e2) return;
+
+          const g1 = p.goles_equipo_1, g2 = p.goles_equipo_2;
+
+          e1.pj++; e2.pj++;
+          e1.gf += g1; e1.gc += g2;
+          e2.gf += g2; e2.gc += g1;
+
+          if (g1 > g2)      { e1.pg++; e2.pp++; }
+          else if (g1 < g2) { e2.pg++; e1.pp++; }
+          else              { e1.pe++; e2.pe++; }
+        });
+
+        // Ordenar: PTS → DG → GF
+        const tabla = Object.values(stats).map(e => ({
+          ...e,
+          dg: e.gf - e.gc,
+          pts: e.pg * 3 + e.pe
+        })).sort((a, b) =>
+          b.pts - a.pts || b.dg - a.dg || b.gf - a.gf
+        );
+
+        tbody.innerHTML = tabla.map((e, i) => `
+          <tr>
+            <td class="td-pos">${i + 1}</td>
+            <td class="td-equipo"><a href="equipo.html?id=${e.id}">${e.nombre}</a></td>
+            <td>${e.pj}</td>
+            <td class="hide-mobile">${e.pg}</td>
+            <td class="hide-mobile">${e.pe}</td>
+            <td class="hide-mobile">${e.pp}</td>
+            <td class="hide-mobile">${e.gf}</td>
+            <td class="hide-mobile">${e.gc}</td>
+            <td>${e.dg > 0 ? '+' + e.dg : e.dg}</td>
+            <td class="td-pts">${e.pts}</td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="10" class="estado error">Error al cargar posiciones: ${err.message}</td></tr>`;
+      }
+    }
+
+    // ─── TABLA DE GOLEADORES ──────────────────────────────────────────────
+
+    async function cargarGoleadores() {
+      const tbody = document.getElementById('body-goleadores');
+
+      try {
+        // Goles normales (no autogoles) con jugador y equipo
+        const { data: goles, error: gErr } = await supabase
+          .from('Gol')
+          .select('id_jugador, id_equipo')
+          .eq('en_contra', false)
+          .not('id_jugador', 'is', null);
+        if (gErr) throw gErr;
+
+        const { data: jugadores, error: jErr } = await supabase
+          .from('Jugador').select('id, nombre, id_equipo');
+        if (jErr) throw jErr;
+
+        const { data: equipos, error: eqErr } = await supabase
+          .from('Equipo').select('id, nombre');
+        if (eqErr) throw eqErr;
+
+        // Mapas para lookup rápido
+        const jugMap = {};
+        jugadores.forEach(j => jugMap[j.id] = j);
+        const eqMap = {};
+        equipos.forEach(e => eqMap[e.id] = e.nombre);
+
+        // Contar goles por jugador
+        const conteo = {};
+        goles.forEach(g => {
+          if (!g.id_jugador) return;
+          if (!conteo[g.id_jugador]) {
+            const j = jugMap[g.id_jugador];
+            conteo[g.id_jugador] = {
+              nombre: j ? j.nombre : '?',
+              equipo: eqMap[j ? j.id_equipo : g.id_equipo] || '?',
+              goles: 0
+            };
+          }
+          conteo[g.id_jugador].goles++;
+        });
+
+        const lista = Object.values(conteo)
+          .sort((a, b) => b.goles - a.goles);
+
+        if (lista.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="estado">Sin goles registrados.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = lista.map((g, i) => `
+          <tr>
+            <td class="td-pos">${i + 1}</td>
+            <td>${g.nombre}</td>
+            <td>${g.equipo}</td>
+            <td class="td-goles">${g.goles}</td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" class="estado error">Error al cargar goleadores: ${err.message}</td></tr>`;
+      }
+    }
+
+    // ─── INIT ─────────────────────────────────────────────────────────────
+    cargarPosiciones();
+    cargarGoleadores();
+  </script>
+
+</body>
+</html>
