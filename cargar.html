@@ -1,1 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cargar Resultados — Torneo de Fútbol</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3a;
+      --accent: #00e676;
+      --accent-dim: #00e67622;
+      --text: #e8eaf0;
+      --text-muted: #7b7f96;
+      --header-bg: #141720;
+      --danger: #ff5252;
+      --danger-dim: #ff525220;
+    }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--header-bg);
+      border-bottom: 2px solid var(--accent);
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-links { display: flex; gap: 0.25rem; margin-left: auto; }
+    .nav-links a {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.4rem 0.85rem;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--border); }
+    .nav-links a.active { color: var(--accent); background: var(--border); }
+
+    /* MAIN */
+    main {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* SELECTOR DE FECHA */
+    .fecha-selector {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .fecha-selector label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    select:focus { border-color: var(--accent); }
+
+    /* LISTA DE PARTIDOS */
+    .fecha-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .partido-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+      gap: 0.75rem;
+    }
+    .partido-row:last-child { border-bottom: none; }
+    .partido-row:hover { background: var(--accent-dim); }
+
+    .equipo-local { font-weight: 500; font-size: 0.95rem; text-align: right; }
+    .equipo-visita { font-weight: 500; font-size: 0.95rem; text-align: left; }
+    .vs-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-align: center;
+      min-width: 50px;
+    }
+
+    .sin-partidos {
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* FORMULARIO DE CARGA */
+    #vista-form { display: none; }
+
+    .partido-header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .partido-header .ph-equipo {
+      font-weight: 600;
+      font-size: 1rem;
+      flex: 1;
+    }
+    .partido-header .ph-equipo:first-child { text-align: right; }
+    .partido-header .ph-vs {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* GOLES */
+    .goles-lista {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .gol-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .gol-item select { width: 100%; }
+
+    .gol-item .contra-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .gol-item .contra-label input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    .btn-eliminar-gol {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--danger);
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s;
+      flex-shrink: 0;
+    }
+    .btn-eliminar-gol:hover { background: var(--danger-dim); }
+
+    /* BOTONES */
+    .acciones {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .btn {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 0.6rem 1.4rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, background 0.15s;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0f1117;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover:not(:disabled) { background: var(--border); }
+
+    .btn-agregar {
+      background: none;
+      color: var(--accent);
+      border: 1px dashed var(--accent);
+      width: 100%;
+    }
+    .btn-agregar:hover { background: var(--accent-dim); }
+
+    /* MENSAJE */
+    .mensaje {
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .mensaje.ok {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .mensaje.error {
+      background: var(--danger-dim);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+    }
+
+    /* BTN VOLVER */
+    .btn-volver {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .btn-volver:hover { color: var(--text); }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      nav { gap: 1rem; padding: 0 1rem; }
+      .nav-brand { font-size: 1.1rem; }
+      .partido-row { padding: 0.65rem 0.85rem; }
+      .equipo-local, .equipo-visita { font-size: 0.82rem; }
+      .gol-item {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+      }
+      .gol-item .contra-label { grid-column: 1; }
+      .btn-eliminar-gol { grid-column: 2; justify-self: end; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-brand" href="index.html">⚽ TORNEO</a>
+    <div class="nav-links">
+      <a href="index.html">Posiciones</a>
+      <a href="fixture.html">Fixture</a>
+      <a href="cargar.html" class="active">Cargar</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- VISTA: SELECCIONAR FECHA Y PARTIDO -->
+    <div id="vista-lista">
+      <section>
+        <div class="section-title">Cargar Resultado</div>
+
+        <div class="fecha-selector">
+          <label for="sel-fecha">Fecha</label>
+          <select id="sel-fecha">
+            <option value="">— elegir —</option>
+            <option value="1">Fecha 1</option>
+            <option value="2">Fecha 2</option>
+            <option value="3">Fecha 3</option>
+            <option value="4">Fecha 4</option>
+            <option value="5">Fecha 5</option>
+            <option value="6">Fecha 6</option>
+            <option value="7">Fecha 7</option>
+            <option value="8">Fecha 8</option>
+            <option value="9">Fecha 9</option>
+          </select>
+        </div>
+      </section>
+
+      <div id="lista-partidos"></div>
+    </div>
+
+    <!-- VISTA: FORMULARIO DE CARGA -->
+    <div id="vista-form">
+      <button class="btn-volver" id="btn-volver">← Volver</button>
+
+      <section style="margin-top: 1.25rem;">
+        <div class="section-title">Cargar Goles</div>
+
+        <div class="partido-header">
+          <span class="ph-equipo" id="ph-local"></span>
+          <span class="ph-vs">vs</span>
+          <span class="ph-equipo" id="ph-visita"></span>
+        </div>
+
+        <div class="goles-lista" id="goles-lista"></div>
+
+        <button class="btn btn-agregar" id="btn-agregar-gol">+ Agregar gol</button>
+
+        <div class="mensaje" id="mensaje"></div>
+
+        <div class="acciones" style="margin-top: 1.25rem;">
+          <button class="btn btn-primary" id="btn-guardar">Guardar resultado</button>
+          <button class="btn btn-secondary" id="btn-cancelar">Cancelar</button>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script>
+    // ── Estado ────────────────────────────────────────────────────────────
+    let partidoActual = null;   // objeto partido seleccionado
+    let equipos = [];           // todos los equipos
+    let jugadores = [];         // todos los jugadores
+    let golesForm = [];         // [{ equipoId, jugadorId|null, enContra }]
+    let contadorGol = 0;
+
+    // ── Elementos ─────────────────────────────────────────────────────────
+    const selFecha       = document.getElementById('sel-fecha');
+    const listaPartidos  = document.getElementById('lista-partidos');
+    const vistaLista     = document.getElementById('vista-lista');
+    const vistaForm      = document.getElementById('vista-form');
+    const phLocal        = document.getElementById('ph-local');
+    const phVisita       = document.getElementById('ph-visita');
+    const golesLista     = document.getElementById('goles-lista');
+    const btnAgregarGol  = document.getElementById('btn-agregar-gol');
+    const btnGuardar     = document.getElementById('btn-guardar');
+    const btnCancelar    = document.getElementById('btn-cancelar');
+    const btnVolver      = document.getElementById('btn-volver');
+    const msgEl          = document.getElementById('mensaje');
+
+    // ── Inicialización ────────────────────────────────────────────────────
+    async function init() {
+      const { data: eq } = await supabaseClient.from('equipo').select('*');
+      const { data: jg } = await supabaseClient.from('jugador').select('*');
+      equipos  = eq  || [];
+      jugadores = jg || [];
+    }
+
+    function equipoNombre(id) {
+      return (equipos.find(e => e.id === id) || {}).nombre || '?';
+    }
+
+    function jugadoresPorEquipo(idEquipo) {
+      return jugadores.filter(j => j.id_equipo === idEquipo);
+    }
+
+    // ── Selector de fecha ─────────────────────────────────────────────────
+    selFecha.addEventListener('change', async () => {
+      const fecha = selFecha.value;
+      listaPartidos.innerHTML = '';
+      if (!fecha) return;
+
+      const { data: partidos, error } = await supabaseClient
+        .from('partido')
+        .select('*')
+        .eq('numero_fecha', fecha)
+        .eq('jugado', false);
+
+      if (error) {
+        listaPartidos.innerHTML = `<div class="sin-partidos" style="color:var(--danger)">Error: ${error.message}</div>`;
+        return;
+      }
+
+      if (!partidos || partidos.length === 0) {
+        listaPartidos.innerHTML = `<div class="sin-partidos">Todos los partidos de esta fecha ya fueron jugados.</div>`;
+        return;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'fecha-card';
+
+      partidos.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'partido-row';
+        row.innerHTML = `
+          <span class="equipo-local">${equipoNombre(p.id_equipo_1)}</span>
+          <span class="vs-badge">vs</span>
+          <span class="equipo-visita">${equipoNombre(p.id_equipo_2)}</span>
+        `;
+        row.addEventListener('click', () => abrirFormulario(p));
+        card.appendChild(row);
+      });
+
+      listaPartidos.appendChild(card);
+    });
+
+    // ── Abrir formulario ──────────────────────────────────────────────────
+    function abrirFormulario(partido) {
+      partidoActual = partido;
+      golesForm = [];
+      contadorGol = 0;
+      golesLista.innerHTML = '';
+      mostrarMensaje('', '');
+
+      phLocal.textContent  = equipoNombre(partido.id_equipo_1);
+      phVisita.textContent = equipoNombre(partido.id_equipo_2);
+
+      vistaLista.style.display = 'none';
+      vistaForm.style.display  = 'block';
+    }
+
+    // ── Volver a lista ────────────────────────────────────────────────────
+    function volverALista() {
+      vistaForm.style.display  = 'none';
+      vistaLista.style.display = 'block';
+      partidoActual = null;
+    }
+
+    btnVolver.addEventListener('click', volverALista);
+    btnCancelar.addEventListener('click', volverALista);
+
+    // ── Agregar fila de gol ───────────────────────────────────────────────
+    btnAgregarGol.addEventListener('click', () => agregarFilaGol());
+
+    function agregarFilaGol() {
+      const id = contadorGol++;
+      golesForm.push({ id, equipoId: null, jugadorId: null, enContra: false });
+
+      const item = document.createElement('div');
+      item.className = 'gol-item';
+      item.dataset.golId = id;
+
+      // Select equipo
+      const selEquipo = document.createElement('select');
+      selEquipo.innerHTML = `<option value="">Equipo</option>`;
+      [partidoActual.id_equipo_1, partidoActual.id_equipo_2].forEach(eqId => {
+        const opt = document.createElement('option');
+        opt.value = eqId;
+        opt.textContent = equipoNombre(eqId);
+        selEquipo.appendChild(opt);
+      });
+
+      // Select jugador
+      const selJugador = document.createElement('select');
+      selJugador.innerHTML = `<option value="">Jugador</option>`;
+      selJugador.disabled = true;
+
+      // Checkbox en contra
+      const contraLabel = document.createElement('label');
+      contraLabel.className = 'contra-label';
+      const chkContra = document.createElement('input');
+      chkContra.type = 'checkbox';
+      contraLabel.appendChild(chkContra);
+      contraLabel.appendChild(document.createTextNode('En contra'));
+
+      // Botón eliminar
+      const btnElim = document.createElement('button');
+      btnElim.className = 'btn-eliminar-gol';
+      btnElim.title = 'Eliminar gol';
+      btnElim.textContent = '×';
+
+      item.appendChild(selEquipo);
+      item.appendChild(selJugador);
+      item.appendChild(contraLabel);
+      item.appendChild(btnElim);
+      golesLista.appendChild(item);
+
+      // ── Eventos de la fila ──
+      selEquipo.addEventListener('change', () => {
+        const eqId = parseInt(selEquipo.value);
+        const gol = golesForm.find(g => g.id === id);
+        if (gol) gol.equipoId = eqId || null;
+
+        selJugador.innerHTML = `<option value="">Jugador</option>`;
+
+        if (eqId && !chkContra.checked) {
+          jugadoresPorEquipo(eqId).forEach(j => {
+            const opt = document.createElement('option');
+            opt.value = j.id;
+            opt.textContent = j.nombre;
+            selJugador.appendChild(opt);
+          });
+          selJugador.disabled = false;
+        } else {
+          selJugador.disabled = true;
+        }
+      });
+
+      selJugador.addEventListener('change', () => {
+        const gol = golesForm.find(g => g.id === id);
+        if (gol) gol.jugadorId = selJugador.value ? parseInt(selJugador.value) : null;
+      });
+
+      chkContra.addEventListener('change', () => {
+        const gol = golesForm.find(g => g.id === id);
+        if (gol) {
+          gol.enContra = chkContra.checked;
+          gol.jugadorId = null;
+        }
+        if (chkContra.checked) {
+          selJugador.value = '';
+          selJugador.disabled = true;
+        } else {
+          if (selEquipo.value) selJugador.disabled = false;
+        }
+      });
+
+      btnElim.addEventListener('click', () => {
+        golesForm = golesForm.filter(g => g.id !== id);
+        item.remove();
+      });
+    }
+
+    // ── Guardar resultado ─────────────────────────────────────────────────
+    btnGuardar.addEventListener('click', async () => {
+      mostrarMensaje('', '');
+
+      // Validar que cada gol tenga equipo
+      for (const g of golesForm) {
+        if (!g.equipoId) {
+          mostrarMensaje('Completá el equipo en todos los goles.', 'error');
+          return;
+        }
+        if (!g.enContra && !g.jugadorId) {
+          mostrarMensaje('Seleccioná el jugador en los goles que no son en contra.', 'error');
+          return;
+        }
+      }
+
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = 'Guardando…';
+
+      try {
+        const p = partidoActual;
+
+        // Contar goles por equipo (en contra suma al equipo contrario)
+        let g1 = 0, g2 = 0;
+        for (const g of golesForm) {
+          if (!g.enContra) {
+            if (g.equipoId === p.id_equipo_1) g1++;
+            else g2++;
+          } else {
+            // gol en contra: anotado por el equipo contrario al que lo metió
+            if (g.equipoId === p.id_equipo_1) g2++;
+            else g1++;
+          }
+        }
+
+        // Insertar goles
+        if (golesForm.length > 0) {
+          const filas = golesForm.map(g => ({
+            id_partido:  p.id,
+            id_equipo:   g.equipoId,
+            id_jugador:  g.enContra ? null : g.jugadorId,
+            en_contra:   g.enContra
+          }));
+
+          const { error: insErr } = await supabaseClient.from('gol').insert(filas);
+          if (insErr) throw insErr;
+        }
+
+        // Actualizar partido
+        const { error: updErr } = await supabaseClient
+          .from('partido')
+          .update({ goles_equipo_1: g1, goles_equipo_2: g2, jugado: true })
+          .eq('id', p.id);
+        if (updErr) throw updErr;
+
+        mostrarMensaje(`✓ Resultado guardado: ${equipoNombre(p.id_equipo_1)} ${g1} - ${g2} ${equipoNombre(p.id_equipo_2)}`, 'ok');
+
+        // Volver a la lista después de 1.8s
+        setTimeout(() => {
+          volverALista();
+          selFecha.dispatchEvent(new Event('change')); // refresca lista
+        }, 1800);
+
+      } catch (err) {
+        mostrarMensaje(`Error al guardar: ${err.message}`, 'error');
+      } finally {
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = 'Guardar resultado';
+      }
+    });
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function mostrarMensaje(texto, tipo) {
+      msgEl.textContent = texto;
+      msgEl.className = `mensaje ${tipo}`;
+      msgEl.style.display = texto ? 'block' : 'none';
+    }
+
+    // ── Arrancar ──────────────────────────────────────────────────────────
+    init();
+  </script>
+
+</body>
+</html>
