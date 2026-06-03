@@ -287,13 +287,13 @@
 
       try {
         // Traer todos los equipos
-        const { data: equipos, error: eqErr } = await supabase
-          .from('Equipo').select('*');
+        const { data: equipos, error: eqErr } = await supabaseClient
+          .from('equipo').select('*');
         if (eqErr) throw eqErr;
 
         // Traer todos los partidos jugados
-        const { data: partidos, error: pErr } = await supabase
-          .from('Partido').select('*').eq('jugado', true);
+        const { data: partidos, error: pErr } = await supabaseClient
+          .from('partido').select('*').eq('jugado', true);
         if (pErr) throw pErr;
 
         // Calcular stats por equipo
@@ -324,7 +324,7 @@
           dg: e.gf - e.gc,
           pts: e.pg * 3 + e.pe
         })).sort((a, b) =>
-          b.pts - a.pts || b.dg - a.dg || b.gf - a.gf
+          b.pts - a.pts || b.pg - a.pg || b.dg - a.dg || b.gf - a.gf
         );
 
         tbody.innerHTML = tabla.map((e, i) => `
@@ -354,19 +354,19 @@
 
       try {
         // Goles normales (no autogoles) con jugador y equipo
-        const { data: goles, error: gErr } = await supabase
-          .from('Gol')
+        const { data: goles, error: gErr } = await supabaseClient
+          .from('gol')
           .select('id_jugador, id_equipo')
           .eq('en_contra', false)
           .not('id_jugador', 'is', null);
         if (gErr) throw gErr;
 
-        const { data: jugadores, error: jErr } = await supabase
-          .from('Jugador').select('id, nombre, id_equipo');
+        const { data: jugadores, error: jErr } = await supabaseClient
+          .from('jugador').select('id, nombre, id_equipo');
         if (jErr) throw jErr;
 
-        const { data: equipos, error: eqErr } = await supabase
-          .from('Equipo').select('id, nombre');
+        const { data: equipos, error: eqErr } = await supabaseClient
+          .from('equipo').select('id, nombre');
         if (eqErr) throw eqErr;
 
         // Mapas para lookup rápido
